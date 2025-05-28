@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FACES DE RUA - DADOS DO CENSO-2022</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map { height: 350px; width: 100%; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    h1 {
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      background-color: #007BFF;
+      color: white;
+    }
+    #filtro { margin: 20px auto; display: flex; justify-content: center; }
+    #filtro select { padding: 5px 10px; }
+    footer {
+      background-color: #007BFF;
+      padding: 20px;
+      text-align: center;
+      color: white;
+      margin-top: 20px;
+    }
+    footer a { color: white; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>FACES DE RUA - DADOS DO CENSO-2022</h1>
+
+  <div id="filtro">
+    <label for="regiaoSelect">Filtrar por região: </label>
+    <select id="regiaoSelect" onchange="filtrarPorRegiao()">
+      <option value="todos">Todos</option>
+      <option value="Norte">Norte</option>
+      <option value="Nordeste">Nordeste</option>
+      <option value="Centro-Oeste">Centro-Oeste</option>
+      <option value="Sudeste">Sudeste</option>
+      <option value="Sul">Sul</option>
+    </select>
+  </div>
+
+  <div id="map"></div>
+
+  <footer>
+    Site desenvolvido pelo GT de Importação da UMBRAOSM - União dos Mapeadores Brasileiros do OpenStreetMap.<br/>
+    Contato por E-mail: <a href="mailto:contato@umbraosm.com.br">contato@umbraosm.com.br</a> - 
+    Grupo Telegram UMBRAOSM: <a href="https://t.me/grupoumbraosm">https://t.me/grupoumbraosm</a> - 
+    Comunidade OSM Brasil: <a href="https://t.me/OSMBrasil_Comunidade">https://t.me/OSMBrasil_Comunidade</a>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const estados = [
+      { uf: "AC", nome: "Acre", regiao: "Norte", lat: -9.0238, lon: -70.812, cor: "green" },
+      { uf: "AL", nome: "Alagoas", regiao: "Nordeste", lat: -9.5713, lon: -36.7820, cor: "red" },
+      { uf: "AP", nome: "Amapá", regiao: "Norte", lat: 1.373, lon: -52.553, cor: "green" },
+      { uf: "AM", nome: "Amazonas", regiao: "Norte", lat: -3.4168, lon: -65.8561, cor: "green" },
+      { uf: "BA", nome: "Bahia", regiao: "Nordeste", lat: -12.5797, lon: -41.7007, cor: "red", url: "https://projeto.softwarelivre.tec.br/s/JZnnzcEqyyxX6pN" },
+      { uf: "CE", nome: "Ceará", regiao: "Nordeste", lat: -5.4984, lon: -39.3206, cor: "red" },
+      { uf: "DF", nome: "Distrito Federal", regiao: "Centro-Oeste", lat: -15.7998, lon: -47.8645, cor: "orange" },
+      { uf: "ES", nome: "Espírito Santo", regiao: "Sudeste", lat: -19.1834, lon: -40.3089, cor: "blue" },
+      { uf: "GO", nome: "Goiás", regiao: "Centro-Oeste", lat: -15.827, lon: -49.8362, cor: "orange" },
+      { uf: "MA", nome: "Maranhão", regiao: "Nordeste", lat: -4.9609, lon: -45.2744, cor: "red" },
+      { uf: "MT", nome: "Mato Grosso", regiao: "Centro-Oeste", lat: -12.6819, lon: -56.9211, cor: "orange" },
+      { uf: "MS", nome: "Mato Grosso do Sul", regiao: "Centro-Oeste", lat: -20.7722, lon: -54.7852, cor: "orange" },
+      { uf: "MG", nome: "Minas Gerais", regiao: "Sudeste", lat: -18.5122, lon: -44.5550, cor: "blue" },
+      { uf: "PA", nome: "Pará", regiao: "Norte", lat: -3.4168, lon: -52.4786, cor: "green" },
+      { uf: "PB", nome: "Paraíba", regiao: "Nordeste", lat: -7.2399, lon: -36.7819, cor: "red" },
+      { uf: "PR", nome: "Paraná", regiao: "Sul", lat: -24.8949, lon: -51.6557, cor: "purple" },
+      { uf: "PE", nome: "Pernambuco", regiao: "Nordeste", lat: -8.8137, lon: -36.9541, cor: "red" },
+      { uf: "PI", nome: "Piauí", regiao: "Nordeste", lat: -7.7183, lon: -42.7289, cor: "red" },
+      { uf: "RJ", nome: "Rio de Janeiro", regiao: "Sudeste", lat: -22.9068, lon: -43.1729, cor: "blue" },
+      { uf: "RN", nome: "Rio Grande do Norte", regiao: "Nordeste", lat: -5.7945, lon: -36.5183, cor: "red" },
+      { uf: "RS", nome: "Rio Grande do Sul", regiao: "Sul", lat: -30.0346, lon: -51.2177, cor: "purple" },
+      { uf: "RO", nome: "Rondônia", regiao: "Norte", lat: -11.5057, lon: -63.5806, cor: "green" },
+      { uf: "RR", nome: "Roraima", regiao: "Norte", lat: 2.7376, lon: -62.0751, cor: "green" },
+      { uf: "SC", nome: "Santa Catarina", regiao: "Sul", lat: -27.5954, lon: -48.5480, cor: "purple" },
+      { uf: "SP", nome: "São Paulo", regiao: "Sudeste", lat: -23.5505, lon: -46.6333, cor: "blue" },
+      { uf: "SE", nome: "Sergipe", regiao: "Nordeste", lat: -10.5741, lon: -37.3857, cor: "red" },
+      { uf: "TO", nome: "Tocantins", regiao: "Norte", lat: -10.1753, lon: -48.2982, cor: "green" }
+    ];
+
+    const map = L.map('map').setView([-15.5, -55], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const marcadores = [];
+
+    estados.forEach(estado => {
+      const link = estado.url || `downloads/${estado.uf}.zip`;
+      const marker = L.circleMarker([estado.lat, estado.lon], {
+        radius: 8,
+        fillColor: estado.cor,
+        color: '#000',
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+      }).bindPopup(
+        `<strong>Faces do Censo-2022 - ${estado.nome}</strong><br/>
+         <a href="${link}" download>Download (${estado.uf})</a>`
+      );
+
+      marker.addTo(map);
+      marker.regiao = estado.regiao; // Para filtragem
+      marcadores.push(marker);
+    });
+
+    function filtrarPorRegiao() {
+      const selecao = document.getElementById("regiaoSelect").value;
+      marcadores.forEach(m => {
+        if (selecao === "todos" || m.regiao === selecao) {
+          map.addLayer(m);
+        } else {
+          map.removeLayer(m);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
+
