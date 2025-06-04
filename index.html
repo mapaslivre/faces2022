@@ -6,8 +6,15 @@
   <title>FACES DE RUA - DADOS DO CENSO-2022</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    #map { height: 350px; width: 100%; }
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      font-family: Arial, sans-serif;
+    }
     h1 {
       text-align: center;
       margin: 0;
@@ -15,34 +22,49 @@
       background-color: #007BFF;
       color: white;
     }
-    #filtro { margin: 20px auto; display: flex; justify-content: center; }
-    #filtro select { padding: 5px 10px; }
+    #filtro {
+      margin: 20px auto;
+      display: flex;
+      justify-content: center;
+    }
+    #filtro select {
+      padding: 5px 10px;
+    }
+    #map {
+      height: 350px;
+      width: 100%;
+      flex-shrink: 0;
+    }
     footer {
       background-color: #007BFF;
       padding: 20px;
       text-align: center;
       color: white;
-      margin-top: 20px;
     }
-    footer a { color: white; text-decoration: underline; }
+    footer a {
+      color: white;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
   <h1>FACES DE RUA - DADOS DO CENSO-2022</h1>
 
-  <div id="filtro">
-    <label for="regiaoSelect">Filtrar por região: </label>
-    <select id="regiaoSelect" onchange="filtrarPorRegiao()">
-      <option value="todos">Todos</option>
-      <option value="Norte">Norte</option>
-      <option value="Nordeste">Nordeste</option>
-      <option value="Centro-Oeste">Centro-Oeste</option>
-      <option value="Sudeste">Sudeste</option>
-      <option value="Sul">Sul</option>
-    </select>
-  </div>
+  <div style="flex: 1;">
+    <div id="filtro">
+      <label for="regiaoSelect">Filtrar por região: </label>
+      <select id="regiaoSelect" onchange="filtrarPorRegiao()">
+        <option value="todos">Todos</option>
+        <option value="Norte">Norte</option>
+        <option value="Nordeste">Nordeste</option>
+        <option value="Centro-Oeste">Centro-Oeste</option>
+        <option value="Sudeste">Sudeste</option>
+        <option value="Sul">Sul</option>
+      </select>
+    </div>
 
-  <div id="map"></div>
+    <div id="map"></div>
+  </div>
 
   <footer>
     Site desenvolvido pelo GT de Importação da UMBRAOSM - União dos Mapeadores Brasileiros do OpenStreetMap.<br/>
@@ -58,7 +80,7 @@
       { uf: "AL", nome: "Alagoas", regiao: "Nordeste", lat: -9.5713, lon: -36.7820, cor: "red" },
       { uf: "AP", nome: "Amapá", regiao: "Norte", lat: 1.373, lon: -52.553, cor: "green" },
       { uf: "AM", nome: "Amazonas", regiao: "Norte", lat: -3.4168, lon: -65.8561, cor: "green" },
-      { uf: "BA", nome: "Bahia", regiao: "Nordeste", lat: -12.5797, lon: -41.7007, cor: "red", url: "https://projeto.softwarelivre.tec.br/s/JZnnzcEqyyxX6pN" },
+      { uf: "BA", nome: "Bahia", regiao: "Nordeste", lat: -12.5797, lon: -41.7007, cor: "red" },
       { uf: "CE", nome: "Ceará", regiao: "Nordeste", lat: -5.4984, lon: -39.3206, cor: "red" },
       { uf: "DF", nome: "Distrito Federal", regiao: "Centro-Oeste", lat: -15.7998, lon: -47.8645, cor: "orange" },
       { uf: "ES", nome: "Espírito Santo", regiao: "Sudeste", lat: -19.1834, lon: -40.3089, cor: "blue" },
@@ -91,7 +113,6 @@
     const marcadores = [];
 
     estados.forEach(estado => {
-      const link = estado.url || `downloads/${estado.uf}.zip`;
       const marker = L.circleMarker([estado.lat, estado.lon], {
         radius: 8,
         fillColor: estado.cor,
@@ -101,11 +122,11 @@
         fillOpacity: 0.8
       }).bindPopup(
         `<strong>Faces do Censo-2022 - ${estado.nome}</strong><br/>
-         <a href="${link}" download>Download (${estado.uf})</a>`
+         <a href="downloads/${estado.uf}.zip" download>Download (${estado.uf})</a>`
       );
 
       marker.addTo(map);
-      marker.regiao = estado.regiao; // Para filtragem
+      marker.regiao = estado.regiao;
       marcadores.push(marker);
     });
 
